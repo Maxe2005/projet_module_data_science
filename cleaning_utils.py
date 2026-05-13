@@ -1,7 +1,11 @@
 import pandas as pd
 
+# On a tester plusieurs encadrements pour l'IQR, 0.95 semble être un bon compromis pour notre dataset
 
-def detect_outliers(
+encadrement = 0.95
+
+
+def detect_outliers_by_column(
     data: pd.DataFrame, column: str
 ) -> tuple[pd.DataFrame, float, float]:
     """
@@ -18,8 +22,8 @@ def detect_outliers(
         le nom de la colonne analysée,
         et les bornes inférieure et supérieure pour les outliers.
     """
-    Q1 = data[column].quantile(0.25)
-    Q3 = data[column].quantile(0.75)
+    Q1 = data[column].quantile(0.5 - encadrement / 2)
+    Q3 = data[column].quantile(0.5 + encadrement / 2)
     IQR = Q3 - Q1
     lower_bound = Q1 - 1.5 * IQR
     upper_bound = Q3 + 1.5 * IQR
@@ -28,6 +32,43 @@ def detect_outliers(
     for i, row in outliers.iterrows():
         print(f"Ligne: {i}, id : {row["id"]}, Value: {row[column]}")
     return outliers, lower_bound, upper_bound
+
+
+def detect_outliers(data: pd.DataFrame) -> dict:
+    """Detecte les outliers dans le DataFrame en utilisant la méthode de l'écart interquartile (IQR).
+
+    Args:
+        data (pd.DataFrame): DataFrame pandas contenant les données.
+
+    Returns:
+        dict: Un dictionnaire mappant chaque colonne numérique à ses outliers.
+              Format: {colonne: DataFrame_des_outliers}
+    """
+    outliers_by_column = {}
+    for column in data.columns:
+        if pd.api.types.is_numeric_dtype(data[column]):
+            Q1 = data[column].quantile(0.5 - encadrement / 2)
+            Q3 = data[column].quantile(0.5 + encadrement / 2)
+            IQR = Q3 - Q1
+            lower_bound = Q1 - 1.5 * IQR
+            upper_bound = Q3 + 1.5 * IQR
+            column_outliers = data[
+                (data[column] < lower_bound) | (data[column] > upper_bound)
+            ]
+            if not column_outliers.empty:
+                outliers_by_column[column] = column_outliers
+
+    return outliers_by_column
+
+
+def detect_missing_values(data: pd.DataFrame) -> pd.DataFrame:
+    """Detecte les valeurs manquantes dans le DataFrame.
+    Args:
+        data (pd.DataFrame): DataFrame pandas contenant les données.
+    Returns:
+        pd.DataFrame: Un DataFrame contenant les lignes avec des valeurs manquantes.
+    """
+    return data.isna().sum().sum()
 
 
 def delete_column(data, column_name):
