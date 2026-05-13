@@ -1,9 +1,9 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split, KFold, cross_val_score
-from sklearn.linear_model import Perceptron as SKPerceptron
 from sklearn import metrics
+from sklearn.linear_model import Perceptron as SKPerceptron
+from sklearn.model_selection import KFold, cross_val_score, train_test_split
 
 from perceptron import Perceptron
 
