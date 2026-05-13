@@ -5,7 +5,7 @@ from sklearn import metrics
 from sklearn.linear_model import Perceptron as SKPerceptron
 from sklearn.model_selection import KFold, cross_val_score, train_test_split
 
-from perceptron import Perceptron
+from help.perceptron import Perceptron
 
 
 def load_data():

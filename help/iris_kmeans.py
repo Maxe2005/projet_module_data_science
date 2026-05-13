@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans as SklearnKMeans
 from sklearn.metrics import silhouette_score
 
-from kmeans import KMeans
+from help.kmeans import KMeans
 
 
 def load_data():

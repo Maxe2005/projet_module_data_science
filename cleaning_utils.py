@@ -30,7 +30,7 @@ def detect_outliers_by_column(
     outliers = data[(data[column] < lower_bound) | (data[column] > upper_bound)]
     print(f"Outliers detected in {column}:")
     for i, row in outliers.iterrows():
-        print(f"Ligne: {i}, id : {row["id"]}, Value: {row[column]}")
+        print(f"Ligne: {i}, id : {row['id']}, Value: {row[column]}")
     return outliers, lower_bound, upper_bound
 
 
@@ -71,7 +71,9 @@ def detect_missing_values(data: pd.DataFrame) -> pd.DataFrame:
     return data.isna().sum().sum()
 
 
-def delete_column(data, column_name):
+def delete_column(data, column_name, inplace: bool = False):
+    if not inplace:
+        data = data.copy()
     if data is not None:
         data = data.drop(columns=[column_name])
         return data

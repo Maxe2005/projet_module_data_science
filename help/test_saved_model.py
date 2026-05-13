@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from sklearn import metrics
 
-from perceptron import Perceptron
+from help.perceptron import Perceptron
 
 
 def load_data(csv_path="iris.csv"):
