@@ -30,21 +30,27 @@ def detect_outliers_by_column(
     outliers = data[(data[column] < lower_bound) | (data[column] > upper_bound)]
     print(f"Outliers detected in {column}:")
     for i, row in outliers.iterrows():
-        print(f"Ligne: {i}, id : {row["id"]}, Value: {row[column]}")
+        print(f"Ligne: {i}, id : {row['id']}, Value: {row[column]}")
     return outliers, lower_bound, upper_bound
 
 
 def detect_outliers(data: pd.DataFrame) -> dict:
-    """Detecte les outliers dans le DataFrame en utilisant la méthode de l'écart interquartile (IQR).
+    """Detecte les outliers dans le DataFrame et retourne les IDs concernés.
 
     Args:
         data (pd.DataFrame): DataFrame pandas contenant les données.
 
     Returns:
-        dict: Un dictionnaire mappant chaque colonne numérique à ses outliers.
-              Format: {colonne: DataFrame_des_outliers}
+        dict: Un dictionnaire mappant chaque colonne numérique à une liste d'IDs
+              des lignes avec des outliers.
+              Format: {colonne: [id1, id2, ...]}
     """
+    if data is None:
+        return {}
+
+    id_column = "id" if "id" in data.columns else None
     outliers_by_column = {}
+
     for column in data.columns:
         if pd.api.types.is_numeric_dtype(data[column]):
             Q1 = data[column].quantile(0.5 - encadrement / 2)
@@ -56,19 +62,43 @@ def detect_outliers(data: pd.DataFrame) -> dict:
                 (data[column] < lower_bound) | (data[column] > upper_bound)
             ]
             if not column_outliers.empty:
-                outliers_by_column[column] = column_outliers
+                outliers_by_column[column] = (
+                    column_outliers[id_column].tolist()
+                    if id_column is not None
+                    else column_outliers.index.tolist()
+                )
 
     return outliers_by_column
 
 
-def detect_missing_values(data: pd.DataFrame) -> pd.DataFrame:
-    """Detecte les valeurs manquantes dans le DataFrame.
+def detect_missing_values(data: pd.DataFrame) -> dict:
+    """Detecte les valeurs manquantes par colonne et retourne les IDs concernés.
+
     Args:
         data (pd.DataFrame): DataFrame pandas contenant les données.
+
     Returns:
-        pd.DataFrame: Un DataFrame contenant les lignes avec des valeurs manquantes.
+        dict: Dictionnaire avec pour chaque colonne une liste d'IDs des lignes
+              où la valeur est manquante.
+              Format: {colonne: [id1, id2, ...]}
     """
-    return data.isna().sum().sum()
+    if data is None:
+        return {}
+
+    id_column = "id" if "id" in data.columns else None
+    missing_by_column = {}
+
+    for column in data.columns:
+        missing_rows = data[data[column].isna()]
+        if not missing_rows.empty:
+            ids = (
+                missing_rows[id_column].tolist()
+                if id_column is not None
+                else missing_rows.index.tolist()
+            )
+            missing_by_column[column] = ids
+
+    return missing_by_column
 
 
 def delete_column(data, column_name):
