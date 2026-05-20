@@ -1,0 +1,91 @@
+"""Entraînement d'un modèle de régression logistique
+
+Usage minimal:
+python train_logistic_regression.py --data-path car_insurance_formatted.csv
+"""
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+from typing import Literal, cast
+
+import joblib
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
+
+from data_split_utils import split_train_test
+
+
+def train_logistic_regression(
+    data_path: str,
+    target: str = "outcome",
+    test_size: float = 0.2,
+    random_state: int | None = 0,
+    model_out: str | None = None,
+    solver: str = "lbfgs",
+    max_iter: int = 100,
+):
+    """Charge les données, entraîne une LogisticRegression et retourne le modèle entraîné.
+
+    Retourne: (model, X_test, y_test)
+    """
+    df = pd.read_csv(data_path)
+
+    X_train, X_test, y_train, y_test = split_train_test(
+        df, target=target, test_size=test_size, random_state=random_state
+    )
+
+    solver_cast = cast(
+        Literal["lbfgs", "liblinear", "newton-cg", "newton-cholesky", "sag", "saga"],
+        solver,
+    )
+    model = LogisticRegression(solver=solver_cast, max_iter=max_iter)
+    model.fit(X_train, y_train)
+
+    # Évaluation simple
+    y_pred = model.predict(X_test)
+    acc = accuracy_score(y_test, y_pred)
+
+    print(f"Accuracy (test): {acc:.4f}")
+    print("Classification report:")
+    print(classification_report(y_test, y_pred))
+
+    # Sauvegarde
+    if model_out:
+        out_path = Path(model_out)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        joblib.dump(model, out_path)
+        print(f"Modèle sauvegardé dans: {out_path}")
+
+    return model, X_test, y_test
+
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Entraîne une régression logistique")
+    p.add_argument("--data-path", type=str, default="car_insurance_formatted.csv")
+    p.add_argument("--target", type=str, default="outcome")
+    p.add_argument("--test-size", type=float, default=0.2)
+    p.add_argument("--random-state", type=int, default=0)
+    p.add_argument("--model-out", type=str, default="models/logistic_regression.joblib")
+    p.add_argument("--solver", type=str, default="lbfgs")
+    p.add_argument("--max-iter", type=int, default=100)
+    return p.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    train_logistic_regression(
+        data_path=args.data_path,
+        target=args.target,
+        test_size=args.test_size,
+        random_state=args.random_state,
+        model_out=args.model_out,
+        solver=args.solver,
+        max_iter=args.max_iter,
+    )
+
+
+if __name__ == "__main__":
+    main()

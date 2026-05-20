@@ -1,6 +1,8 @@
 import pandas as pd
 
+from evaluation_utils import evaluate_model
 from format_data_utils import encode_categorical, normalize_features
+from train_logistic_regression import train_logistic_regression
 
 
 def read_data(file_path):
@@ -47,6 +49,24 @@ def main():
     encode_categorical(data, inplace=True)
     normalize_features(data, inplace=True)
     write_data(data, "car_insurance_formatted.csv")
+
+    print(
+        "Data preprocessing completed. Formatted data saved to 'car_insurance_formatted.csv'."
+    )
+
+    print("\nStarting logistic regression training...")
+    model, X_test, y_test = train_logistic_regression(
+        data_path="car_insurance_formatted.csv",
+        target="outcome",
+        test_size=0.2,
+        random_state=42,
+        model_out="models/logistic_regression_model.joblib",
+    )
+    print("Logistic regression training completed.\n")
+
+    print("Evaluating model...")
+    evaluate_model(model, X_test, y_test, show_samples=True, sample_limit=20)
+    print("Model evaluation completed.")
 
 
 if __name__ == "__main__":
