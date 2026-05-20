@@ -6,6 +6,7 @@ from cleaning_utils import (  # remove_error_rows,
     get_valid_distribution,
     impute_proportional,
 )
+from compare_classifiers import ClassifierComparison
 from evaluation_utils import evaluate_model
 from format_data_utils import binarize_target, encode_categorical, normalize_features
 from training_supervisor import cross_validate_model, train_validate_simple
@@ -59,25 +60,19 @@ def clean_data(data):
     return data_cleaned
 
 
-def main():
-    data = read_data(file_path)
-    if data is None:
-        return
-
+def preprocess_data(data, target="outcome", path_out="car_insurance_formatted.csv"):
     data = clean_data(data)
-
-    if data is None:
-        return
 
     encode_categorical(data, inplace=True)
     normalize_features(data, inplace=True)
     binarize_target(data, target="outcome", inplace=True)
-    write_data(data, "car_insurance_formatted.csv")
+    write_data(data, path_out)
 
-    print(
-        "Data preprocessing completed. Formatted data saved to 'car_insurance_formatted.csv'."
-    )
+    print(f"Data preprocessing completed. Formatted data saved to '{path_out}'.")
+    return data
 
+
+def simple_train_validate(data):
     print("\nStarting logistic regression training (simple split)...")
     model, X_test, y_test = train_validate_simple(
         data,
@@ -88,15 +83,45 @@ def main():
     )
     print("Logistic regression training completed.\n")
 
-    print("Running cross-validation (5-fold) to improve evaluation...")
-    cv_scores = cross_validate_model(data, target="outcome", cv=5)
-    print(f"Cross-val mean: {cv_scores.mean():.4f}, std: {cv_scores.std():.4f}\n")
-
     print("Evaluating model...")
     evaluate_model(model, X_test, y_test, show_samples=False, sample_limit=20)
     print("Model evaluation completed.")
 
 
+def cross_validate(data):
+    print("Running cross-validation (5-fold) to improve evaluation...")
+    cv_scores = cross_validate_model(data, target="outcome", cv=5)
+    print(f"Cross-val mean: {cv_scores.mean():.4f}, std: {cv_scores.std():.4f}\n")
+
+
+def compare_classifiers(data_path):
+    print("Comparing classifiers...")
+    comparison = ClassifierComparison(
+        data_path=data_path,
+        target="outcome",
+        test_size=0.2,
+        random_state=42,
+        cv_folds=5,
+    )
+
+    comparison.compare_all_classifiers()
+
+
+def main():
+    data = read_data(file_path)
+    if data is None:
+        return
+
+    data = preprocess_data(data, path_out=file_path_out)
+
+    # simple_train_validate(data)
+
+    cross_validate(data)
+
+    # compare_classifiers(file_path_out)
+
+
 if __name__ == "__main__":
     file_path = "car_insurance.csv"
+    file_path_out = "car_insurance_formatted.csv"
     main()

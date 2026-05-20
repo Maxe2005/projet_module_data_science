@@ -116,18 +116,14 @@ def build_error_report_json(data: pd.DataFrame) -> dict:
     return merged
 
 
-def delete_column(data, column_name, inplace: bool = False):
+def delete_column(data: pd.DataFrame, column_name: str, inplace: bool = False):
     if not inplace:
         data = data.copy()
-    if data is not None:
-        data = data.drop(columns=[column_name])
-        return data
-    else:
-        print("Data is None, cannot delete column.")
-        return None
+    data = data.drop(columns=[column_name])
+    return data
 
 
-def delete_lines_with_ids(data, ids):
+def delete_lines_with_ids(data: pd.DataFrame, ids: list):
     """
     Deletes lines from the DataFrame based on their indices.
 
