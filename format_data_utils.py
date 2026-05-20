@@ -116,4 +116,63 @@ def normalize_features(
     return df, scaler
 
 
-__all__ = ["encode_categorical", "normalize_features"]
+def binarize_target(
+    df: pd.DataFrame,
+    target: str = "outcome",
+    inplace: bool = False,
+) -> pd.DataFrame:
+    """Convertit une cible binaire en labels discrets 0/1.
+
+    Cette fonction est utile quand la cible a été transformée en valeurs float
+    au cours du prétraitement, par exemple après une normalisation involontaire.
+
+    Règles:
+    - Si la cible contient exactement deux valeurs numériques distinctes,
+      elles sont mappées vers 0 et 1 dans l'ordre croissant.
+    - Si la cible est dans l'intervalle [0, 1] mais stockée en float,
+      elle est binarisée avec un seuil à 0.5.
+    - Si la cible est déjà discrète, elle est conservée telle quelle.
+    """
+    if target not in df.columns:
+        raise ValueError(f"Colonne cible '{target}' introuvable dans le DataFrame.")
+
+    if not inplace:
+        df = df.copy()
+
+    series = df[target]
+
+    if pd.api.types.is_integer_dtype(series) or pd.api.types.is_bool_dtype(series):
+        return df
+
+    if pd.api.types.is_numeric_dtype(series):
+        unique_values = pd.Series(series.dropna().unique()).sort_values().tolist()
+
+        if len(unique_values) == 2:
+            mapping = {unique_values[0]: 0, unique_values[1]: 1}
+            df[target] = series.map(mapping).astype(int)
+            return df
+
+        if (
+            pd.api.types.is_float_dtype(series)
+            and series.min() >= 0.0
+            and series.max() <= 1.0
+        ):
+            df[target] = (series >= 0.5).astype(int)
+            return df
+
+        raise ValueError(
+            f"La cible '{target}' contient {len(unique_values)} valeurs numériques distinctes et ne peut pas être binarisée automatiquement."
+        )
+
+    unique_values = series.dropna().unique().tolist()
+    if len(unique_values) == 2:
+        mapping = {unique_values[0]: 0, unique_values[1]: 1}
+        df[target] = series.map(mapping).astype(int)
+        return df
+
+    raise ValueError(
+        f"La cible '{target}' n'est pas binaire et ne peut pas être convertie automatiquement."
+    )
+
+
+__all__ = ["encode_categorical", "normalize_features", "binarize_target"]
