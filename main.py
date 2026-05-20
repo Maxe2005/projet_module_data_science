@@ -1,7 +1,12 @@
 import pandas as pd
 
+from cleaning_utils import (
+    build_error_report_json,
+    get_valid_distribution,
+    impute_proportional,
+)
 from evaluation_utils import evaluate_model
-from format_data_utils import encode_categorical, normalize_features
+from format_data_utils import binarize_target, encode_categorical, normalize_features
 from train_logistic_regression import train_logistic_regression
 
 
@@ -41,13 +46,23 @@ def write_data(data, file_path):
         print(f"An error occurred while writing the file: {e}")
 
 
+def clean_data(data):
+    errors = build_error_report_json(data)
+    distribution = get_valid_distribution(data, errors)
+    data_cleaned = impute_proportional(data, errors, distribution)
+    return data_cleaned
+
+
 def main():
     data = read_data(file_path)
     if data is None:
         return
 
+    data = clean_data(data)
+
     encode_categorical(data, inplace=True)
     normalize_features(data, inplace=True)
+    binarize_target(data, target="outcome", inplace=True)
     write_data(data, "car_insurance_formatted.csv")
 
     print(

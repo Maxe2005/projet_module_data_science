@@ -42,6 +42,33 @@ def train_logistic_regression(
         solver,
     )
     model = LogisticRegression(solver=solver_cast, max_iter=max_iter)
+    # Vérification / conversion de la cible pour s'assurer qu'on a bien des labels discrets
+    # `split_train_test` retourne des ndarray; on les convertit en Series pour manipulation
+    y_train = pd.Series(y_train)
+    y_test = pd.Series(y_test)
+
+    # Si la cible est en float mais représente des classes (0.0/1.0), on convertit en int
+    if pd.api.types.is_float_dtype(y_train):
+        # Cas fréquent: probabilités ou 0.0/1.0 encodées en float -> binariser si dans [0,1]
+        if y_train.min() >= 0.0 and y_train.max() <= 1.0:
+            y_train = (y_train >= 0.5).astype(int)
+            y_test = (y_test >= 0.5).astype(int)
+            print(
+                "[INFO] Target values appear in [0,1]; binarized at 0.5 for classification."
+            )
+        # Si toutes les valeurs sont des entiers représentés en float (ex: 0.0,1.0,2.0)
+        elif (y_train.dropna() % 1 == 0).all():
+            y_train = y_train.astype(int)
+            y_test = y_test.astype(int)
+            print(
+                "[INFO] Target float values are whole numbers; converted to int labels."
+            )
+        else:
+            raise ValueError(
+                f"Target '{target}' appears continuous (float) with {y_train.nunique()} unique values. "
+                "A classifier requires discrete labels — please preprocess the target (binarize or categorize) before training."
+            )
+
     model.fit(X_train, y_train)
 
     # Évaluation simple

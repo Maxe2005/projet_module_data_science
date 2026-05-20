@@ -3,3 +3,4 @@ __pycache__/
 test.py
 car_insurance_formatted.csv
 correlations/*.png
+models/
