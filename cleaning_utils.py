@@ -146,6 +146,35 @@ def delete_lines_with_ids(data, ids):
         return None
 
 
+def remove_error_rows(data: pd.DataFrame, errors: dict) -> pd.DataFrame:
+    """Supprime les lignes marquées comme erronées dans le DataFrame.
+
+    Args:
+        data (pd.DataFrame): DataFrame pandas contenant les données.
+        errors (dict): Dictionnaire au format {colonne: [index1, index2, ...]} indiquant
+                       les indices de lignes à supprimer.
+
+    Returns:
+        pd.DataFrame: Une copie du DataFrame sans les lignes erronées.
+    """
+    if data is None:
+        print("Data is None, cannot remove error rows.")
+        return None
+
+    # Collecte unique des indices d'erreurs pour supprimer toutes les lignes concernées.
+    error_indices = set()
+    for indices in errors.values():
+        if indices is None:
+            continue
+        error_indices.update(indices)
+
+    if not error_indices:
+        return data.copy()
+
+    cleaned_data = data[~data.index.isin(error_indices)].copy()
+    return cleaned_data
+
+
 def get_valid_distribution(data: pd.DataFrame, errors: dict) -> dict:
     """
     Récupère la liste des valeurs valides pour chaque colonne contenant des erreurs.
