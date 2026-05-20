@@ -35,8 +35,11 @@ def top_pairwise_correlations(
     df: pd.DataFrame, n: int = 10, method: CorrelationMethod = "pearson"
 ) -> List[Tuple[str, str, float]]:
     corr = correlations_matrix(df, method=method).abs()
-    # mask diagonal and duplicates
-    corr.values[np.tril_indices_from(corr.values)] = 0
+    # mask diagonal and duplicates — operate on a writable copy to avoid
+    # "assignment destination is read-only" errors from some pandas backends
+    arr = corr.to_numpy().copy()
+    arr[np.tril_indices_from(arr)] = 0
+    corr = pd.DataFrame(arr, index=corr.index, columns=corr.columns)
     flat = (
         corr.stack()
         .reset_index()

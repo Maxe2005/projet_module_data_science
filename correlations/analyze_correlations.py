@@ -2,7 +2,6 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-
 from correlation_finder_utils import (
     correlations_matrix,
     plot_correlation_heatmap,
@@ -55,12 +54,12 @@ def main(csv_path: str = "car_insurance_formatted.csv"):
             df,
             top_features + [target],
             figsize=(12, 12),
-            save_path="scatter_matrix_selected.png",
+            save_path="correlations/scatter_matrix_selected.png",
         )
         print("Scatter matrix saved to scatter_matrix_selected.png")
 
     # heatmap
-    plot_correlation_heatmap(df, save_path="correlation_heatmap.png")
+    plot_correlation_heatmap(df, save_path="correlations/correlation_heatmap.png")
     print("Heatmap saved to correlation_heatmap.png")
 
 
