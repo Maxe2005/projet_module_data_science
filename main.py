@@ -1,13 +1,14 @@
 import pandas as pd
 
-from cleaning_utils import (
+from cleaning_utils import (  # remove_error_rows,
     build_error_report_json,
+    delete_column,
     get_valid_distribution,
     impute_proportional,
 )
 from evaluation_utils import evaluate_model
 from format_data_utils import binarize_target, encode_categorical, normalize_features
-from train_logistic_regression import train_logistic_regression
+from training_supervisor import cross_validate_model, train_validate_simple
 
 
 def read_data(file_path):
@@ -49,7 +50,12 @@ def write_data(data, file_path):
 def clean_data(data):
     errors = build_error_report_json(data)
     distribution = get_valid_distribution(data, errors)
+    # data_cleaned = remove_error_rows(data, errors)
     data_cleaned = impute_proportional(data, errors, distribution)
+    data_cleaned = delete_column(data_cleaned, "age", inplace=True)
+    # data_cleaned = delete_column(data_cleaned, "speeding_violations", inplace=True)
+    # data_cleaned = delete_column(data_cleaned, "past_accidents", inplace=True)
+    # data_cleaned = delete_column(data_cleaned, "driving_experience", inplace=False)
     return data_cleaned
 
 
@@ -60,6 +66,9 @@ def main():
 
     data = clean_data(data)
 
+    if data is None:
+        return
+
     encode_categorical(data, inplace=True)
     normalize_features(data, inplace=True)
     binarize_target(data, target="outcome", inplace=True)
@@ -69,9 +78,9 @@ def main():
         "Data preprocessing completed. Formatted data saved to 'car_insurance_formatted.csv'."
     )
 
-    print("\nStarting logistic regression training...")
-    model, X_test, y_test = train_logistic_regression(
-        data_path="car_insurance_formatted.csv",
+    print("\nStarting logistic regression training (simple split)...")
+    model, X_test, y_test = train_validate_simple(
+        data,
         target="outcome",
         test_size=0.2,
         random_state=42,
@@ -79,8 +88,12 @@ def main():
     )
     print("Logistic regression training completed.\n")
 
+    print("Running cross-validation (5-fold) to improve evaluation...")
+    cv_scores = cross_validate_model(data, target="outcome", cv=5)
+    print(f"Cross-val mean: {cv_scores.mean():.4f}, std: {cv_scores.std():.4f}\n")
+
     print("Evaluating model...")
-    evaluate_model(model, X_test, y_test, show_samples=True, sample_limit=20)
+    evaluate_model(model, X_test, y_test, show_samples=False, sample_limit=20)
     print("Model evaluation completed.")
 
 
