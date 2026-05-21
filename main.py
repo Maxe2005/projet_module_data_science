@@ -196,13 +196,7 @@ def evaluate_saved_model(model_path, data, target="outcome"):
     print("Model evaluation completed.")
 
 
-def main():
-    data = read_data(file_path)
-    if data is None:
-        return
-
-    data = preprocess_data(data, path_out=file_path_out)
-
+def actions(data):
     # simple_train_validate(data)
 
     cross_validate(data)
@@ -210,6 +204,16 @@ def main():
     # compare_classifiers(file_path_out)
 
     evaluate_saved_model(model_path="models/logistic_regression_cv_best.pkl", data=data)
+
+
+def main():
+    data = read_data(file_path)
+    if data is None:
+        return
+
+    data = preprocess_data(data, path_out=file_path_out)
+
+    actions(data)
 
 
 if __name__ == "__main__":
