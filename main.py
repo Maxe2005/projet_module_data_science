@@ -78,9 +78,7 @@ def clean_data(
 
 
 def preprocess_data(data, target="outcome", path_out="car_insurance_formatted.csv"):
-    data = clean_data(
-        data, cleaning_type="remove", columns_to_remove=["driving_experience"]
-    )
+    data = clean_data(data, cleaning_type="remove", columns_to_remove=["age"])
 
     encode_categorical(data, inplace=True)
     normalize_features(data, inplace=True)
@@ -153,7 +151,7 @@ def main():
 
     # simple_train_validate(data)
 
-    cross_validate(data)
+    # cross_validate(data)
 
     # compare_classifiers(file_path_out)
 

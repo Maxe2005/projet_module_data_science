@@ -4,3 +4,4 @@ test.py
 car_insurance_formatted.csv
 correlations/*.png
 models/
+confusion_matrix.png

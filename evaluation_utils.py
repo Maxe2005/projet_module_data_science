@@ -12,10 +12,13 @@ Retourne un dictionnaire contenant les métriques calculées.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Dict
 
 import numpy as np
+from matplotlib import pyplot as plt
 from sklearn.metrics import (
+    ConfusionMatrixDisplay,
     accuracy_score,
     classification_report,
     confusion_matrix,
@@ -31,6 +34,7 @@ def evaluate_model(
     y_test: Any,
     show_samples: bool = True,
     sample_limit: int = 20,
+    confusion_matrix_image_path: str | None = "confusion_matrix.png",
 ) -> Dict[str, Any]:
     """Évalue un modèle scikit-learn sur un jeu de test.
 
@@ -41,6 +45,8 @@ def evaluate_model(
         show_samples: si True, affiche pour chaque échantillon la prédiction
             et la classe réelle (limité à `sample_limit`).
         sample_limit: nombre maximal d'échantillons à afficher.
+        confusion_matrix_image_path: chemin de sortie pour l'image de la
+            matrice de confusion. Si `None`, aucun fichier n'est sauvegardé.
 
     Returns:
         Un dictionnaire contenant les métriques calculées.
@@ -79,6 +85,19 @@ def evaluate_model(
     print(f"F1 ({average}): {f1:.4f}")
     print("Classification report:")
     print(report)
+
+    if confusion_matrix_image_path is not None:
+        output_path = Path(confusion_matrix_image_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        fig, ax = plt.subplots(figsize=(6, 5))
+        ConfusionMatrixDisplay(confusion_matrix=cm).plot(
+            ax=ax, cmap="Blues", colorbar=True, values_format="d"
+        )
+        ax.set_title("Confusion matrix")
+        fig.tight_layout()
+        fig.savefig(output_path, dpi=200, bbox_inches="tight")
+        plt.close(fig)
+        print(f"Confusion matrix image saved to: {output_path}")
 
     metrics = {
         "accuracy": acc,
