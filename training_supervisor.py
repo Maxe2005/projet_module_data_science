@@ -92,6 +92,9 @@ def cross_validate_model(
 
     Affiche la moyenne et l'écart-type des scores, et sauvegarde le modèle du fold
     qui obtient le meilleur score si `model_out` est fourni.
+
+    Retourne:
+        tuple[np.ndarray, float]: les scores par fold et le meilleur score obtenu.
     """
     X = df.drop(columns=[target])
     y = _prepare_target(df[target])
@@ -130,7 +133,7 @@ def cross_validate_model(
             f"Meilleur modèle CV sauvegardé dans: {saved_path} (score={best_score:.4f})"
         )
 
-    return scores
+    return scores, best_score
 
 
 if __name__ == "__main__":
