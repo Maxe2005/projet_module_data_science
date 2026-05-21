@@ -2,8 +2,10 @@ import pandas as pd
 
 from cleaning_utils import (
     build_error_report_json,
+    delete_column,
     get_valid_distribution,
     impute_proportional,
+    remove_error_rows,
 )
 from evaluation_utils import evaluate_model
 from format_data_utils import binarize_target, encode_categorical, normalize_features
@@ -46,10 +48,29 @@ def write_data(data, file_path):
         print(f"An error occurred while writing the file: {e}")
 
 
-def clean_data(data):
+def clean_data(
+    data: pd.DataFrame, cleaning_type: str = "remove", columns_to_remove: list = []
+) -> pd.DataFrame:
+    """Fonction de nettoyage des données. Supprime ou impute les lignes avec des erreurs selon le type spécifié.
+    Args:
+        data (pd.DataFrame): Le DataFrame à nettoyer.
+        type (str, optional): "remove" supprimer les lignes avec erreurs, "distribution" pour imputer proportionnellement.
+        columns_to_remove (list, optional): Liste des colonnes à supprimer après le nettoyage.
+    Returns:
+        pd.DataFrame: Le DataFrame nettoyé.
+    """
     errors = build_error_report_json(data)
-    distribution = get_valid_distribution(data, errors)
-    data_cleaned = impute_proportional(data, errors, distribution)
+    if cleaning_type == "remove":
+        data_cleaned = remove_error_rows(data, errors)
+    elif cleaning_type == "distribution":
+        distribution = get_valid_distribution(data, errors)
+        data_cleaned = impute_proportional(data, errors, distribution)
+    else:
+        raise ValueError(
+            "Le paramètre 'type' doit être soit 'remove' soit 'distribution'."
+        )
+    for col in columns_to_remove:
+        data_cleaned = delete_column(data_cleaned, col)
     return data_cleaned
 
 
@@ -58,7 +79,9 @@ def main():
     if data is None:
         return
 
-    data = clean_data(data)
+    data = clean_data(
+        data, cleaning_type="remove", columns_to_remove=["driving_experience"]
+    )
 
     encode_categorical(data, inplace=True)
     normalize_features(data, inplace=True)

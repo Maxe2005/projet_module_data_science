@@ -116,10 +116,11 @@ def build_error_report_json(data: pd.DataFrame) -> dict:
     return merged
 
 
-def delete_column(data, column_name, inplace: bool = False):
-    if not inplace:
-        data = data.copy()
+def delete_column(data, column_name):
     if data is not None:
+        if column_name not in data.columns:
+            print(f"Column '{column_name}' does not exist in the DataFrame.")
+            return None
         data = data.drop(columns=[column_name])
         return data
     else:
