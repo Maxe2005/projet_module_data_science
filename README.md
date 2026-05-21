@@ -54,7 +54,7 @@ Les données prétraitées sont enregistrées au format CSV dans un fichier nomm
 
 ### Correlations
 
-Pour analyser les corrélations, vous pouvez utiliser le script `correlations/correlations.py` qui génère des graphiques de corrélation pour les variables numériques et catégorielles. Les graphiques sont enregistrés dans le dossier `correlations/`.
+Pour analyser les corrélations, vous pouvez utiliser le script `correlations/analyze_correlations.py` qui génère des graphiques de corrélation pour les variables numériques et catégorielles. Les graphiques sont enregistrés dans le dossier `correlations/`.
 
 Attention : L'analyse se base sur les données prétraitées, donc assurez-vous d'exécuter `preprocess_data` (ou tout simplement le script `main.py`) avant d'utiliser ce script.
 
