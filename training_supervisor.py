@@ -11,11 +11,14 @@ from __future__ import annotations
 
 from typing import Literal, cast
 
-import joblib
+import numpy as np
 import pandas as pd
+from sklearn.base import clone
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report
-from sklearn.model_selection import KFold, cross_val_score
+from sklearn.metrics import accuracy_score, classification_report, get_scorer
+from sklearn.model_selection import KFold
+
+from model_persistence_utils import save_model
 
 
 def _prepare_target(y):
@@ -70,8 +73,8 @@ def train_validate_simple(
     print(classification_report(y_test, y_pred))
 
     if model_out:
-        joblib.dump(model, model_out)
-        print(f"Modèle sauvegardé dans: {model_out}")
+        saved_path = save_model(model, model_out)
+        print(f"Modèle sauvegardé dans: {saved_path}")
 
     return model, X_test, y_test
 
@@ -83,10 +86,12 @@ def cross_validate_model(
     scoring: str = "accuracy",
     random_state: int | None = 0,
     estimator: LogisticRegression | None = None,
+    model_out: str | None = None,
 ):
     """Effectue une validation croisée KFold et retourne les scores.
 
-    Affiche la moyenne et l'écart-type des scores, et renvoie l'objet scores.
+    Affiche la moyenne et l'écart-type des scores, et sauvegarde le modèle du fold
+    qui obtient le meilleur score si `model_out` est fourni.
     """
     X = df.drop(columns=[target])
     y = _prepare_target(df[target])
@@ -95,12 +100,35 @@ def cross_validate_model(
         estimator = LogisticRegression(max_iter=200)
 
     kf = KFold(n_splits=cv, shuffle=True, random_state=random_state)
-    scores = cross_val_score(estimator, X, y, cv=kf, scoring=scoring)
+    scorer = get_scorer(scoring)
+    scores = []
+    best_score = float("-inf")
+    best_model = None
+
+    for train_index, test_index in kf.split(X, y):
+        fold_estimator = clone(estimator)
+        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+        y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+
+        fold_estimator.fit(X_train, y_train)
+        score = scorer(fold_estimator, X_test, y_test)
+        scores.append(score)
+
+        if score > best_score:
+            best_score = score
+            best_model = fold_estimator
 
     print(f"Cross-validation ({cv}-fold) {scoring} scores:")
     for i, s in enumerate(scores, 1):
         print(f"  Fold {i}: {s:.4f}")
+    scores = np.asarray(scores)
     print(f"Mean: {scores.mean():.4f}  Std: {scores.std():.4f}")
+
+    if model_out and best_model is not None:
+        saved_path = save_model(best_model, model_out)
+        print(
+            f"Meilleur modèle CV sauvegardé dans: {saved_path} (score={best_score:.4f})"
+        )
 
     return scores
 

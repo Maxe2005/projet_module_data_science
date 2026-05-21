@@ -9,6 +9,7 @@ from cleaning_utils import (  # remove_error_rows,
 from compare_classifiers import ClassifierComparison
 from evaluation_utils import evaluate_model
 from format_data_utils import binarize_target, encode_categorical, normalize_features
+from model_persistence_utils import load_model
 from training_supervisor import cross_validate_model, train_validate_simple
 
 
@@ -79,7 +80,7 @@ def simple_train_validate(data):
         target="outcome",
         test_size=0.2,
         random_state=42,
-        model_out="models/logistic_regression_model.joblib",
+        model_out="models/logistic_regression_model.pkl",
     )
     print("Logistic regression training completed.\n")
 
@@ -90,7 +91,12 @@ def simple_train_validate(data):
 
 def cross_validate(data):
     print("Running cross-validation (5-fold) to improve evaluation...")
-    cv_scores = cross_validate_model(data, target="outcome", cv=5)
+    cv_scores = cross_validate_model(
+        data,
+        target="outcome",
+        cv=5,
+        model_out="models/logistic_regression_cv_best.pkl",
+    )
     print(f"Cross-val mean: {cv_scores.mean():.4f}, std: {cv_scores.std():.4f}\n")
 
 
@@ -107,6 +113,19 @@ def compare_classifiers(data_path):
     comparison.compare_all_classifiers()
 
 
+def evaluate_saved_model(model_path, data, target="outcome"):
+    print(f"Loading saved model from {model_path}...")
+    model = load_model(model_path)
+    print("Model loaded.")
+
+    X_test = data.drop(columns=[target])
+    y_test = data[target]
+
+    print("Evaluating model...")
+    evaluate_model(model, X_test, y_test, show_samples=False, sample_limit=20)
+    print("Model evaluation completed.")
+
+
 def main():
     data = read_data(file_path)
     if data is None:
@@ -119,6 +138,8 @@ def main():
     cross_validate(data)
 
     # compare_classifiers(file_path_out)
+
+    evaluate_saved_model(model_path="models/logistic_regression_cv_best.pkl", data=data)
 
 
 if __name__ == "__main__":

@@ -7,15 +7,14 @@ python train_logistic_regression.py --data-path car_insurance_formatted.csv
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 from typing import Literal, cast
 
-import joblib
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
 
 from data_split_utils import split_train_test
+from model_persistence_utils import save_model
 
 
 def train_logistic_regression(
@@ -81,9 +80,7 @@ def train_logistic_regression(
 
     # Sauvegarde
     if model_out:
-        out_path = Path(model_out)
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        joblib.dump(model, out_path)
+        out_path = save_model(model, model_out)
         print(f"Modèle sauvegardé dans: {out_path}")
 
     return model, X_test, y_test
@@ -95,7 +92,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--target", type=str, default="outcome")
     p.add_argument("--test-size", type=float, default=0.2)
     p.add_argument("--random-state", type=int, default=0)
-    p.add_argument("--model-out", type=str, default="models/logistic_regression.joblib")
+    p.add_argument(
+        "--model-out", type=str, default="models/logistic_regression_model.pkl"
+    )
     p.add_argument("--solver", type=str, default="lbfgs")
     p.add_argument("--max-iter", type=int, default=100)
     return p.parse_args()

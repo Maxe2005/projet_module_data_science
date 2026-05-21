@@ -63,9 +63,6 @@ def encode_categorical(
     return df, encoders
 
 
-__all__ = ["encode_categorical"]
-
-
 def normalize_features(
     df: pd.DataFrame,
     cols: Optional[List[str]] = None,
