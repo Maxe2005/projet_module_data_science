@@ -153,14 +153,12 @@ def simple_train_validate(data):
 
 
 def cross_validate(data):
-    print("Running cross-validation (5-fold) to improve evaluation...")
     cv_scores, best_accuracy = cross_validate_model(
         data,
         target="outcome",
         cv=5,
         model_out="models/logistic_regression_cv_best.pkl",
     )
-    print(f"Cross-val mean: {cv_scores.mean():.4f}, std: {cv_scores.std():.4f}\n")
     write_cross_validate_log(
         log_path=CV_LOG_PATH,
         cleaning_type=CLEANING_TYPE,
