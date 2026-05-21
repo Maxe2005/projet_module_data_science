@@ -15,7 +15,7 @@ pip install -r requirements.txt
 
 ## Linter et formateur
 
-J'ai ajouté Black (formateur), isort (tri des imports), et Flake8 (linter), plus une configuration `pre-commit`.
+Le projet contient Black (formateur), isort (tri des imports), et Flake8 (linter), plus une configuration `pre-commit`.
 
 Commandes utiles:
 

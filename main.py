@@ -78,11 +78,15 @@ def clean_data(
 
 
 def preprocess_data(data, target="outcome", path_out="car_insurance_formatted.csv"):
-    data = clean_data(data, cleaning_type="remove", columns_to_remove=["age"])
+    data = clean_data(
+        data,
+        cleaning_type="remove",
+        columns_to_remove=["id", "children", "education", "married"],
+    )
 
     encode_categorical(data, inplace=True)
     normalize_features(data, inplace=True)
-    binarize_target(data, target="outcome", inplace=True)
+    binarize_target(data, target=target, inplace=True)
     write_data(data, path_out)
 
     print(f"Data preprocessing completed. Formatted data saved to '{path_out}'.")
@@ -151,7 +155,7 @@ def main():
 
     # simple_train_validate(data)
 
-    # cross_validate(data)
+    cross_validate(data)
 
     # compare_classifiers(file_path_out)
 
