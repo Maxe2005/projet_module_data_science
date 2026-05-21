@@ -129,7 +129,7 @@ def write_cross_validate_log(
     with log_path.open("a", encoding="utf-8") as log_file:
         log_file.write(f"timestamp: {timestamp}\n")
         log_file.write(f"cleaning_type: {cleaning_type.value}\n")
-        log_file.write(f"columns_to_remove: {columns}\n")
+        log_file.write(f"columns_removed: {columns}\n")
         log_file.write(f"best_model_accuracy: {best_accuracy:.4f}\n")
         log_file.write(f"cv_mean_accuracy: {cv_mean:.4f}\n")
         log_file.write(f"cv_std_accuracy: {cv_std:.4f}\n")
