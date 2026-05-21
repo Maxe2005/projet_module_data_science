@@ -45,7 +45,6 @@ def write_data(data, file_path):
     """
     try:
         data.to_csv(file_path, index=False)
-        print(f"Data successfully written to {file_path}")
     except Exception as e:
         print(f"An error occurred while writing the file: {e}")
 
@@ -79,15 +78,15 @@ def clean_data(
 
 def preprocess_data(data, target="outcome", path_out="car_insurance_formatted.csv"):
     data = clean_data(
-        data, cleaning_type="remove", columns_to_remove=["driving_experience"]
+        data,
+        cleaning_type="remove",
+        columns_to_remove=["id", "children", "education", "married"],
     )
 
     encode_categorical(data, inplace=True)
     normalize_features(data, inplace=True)
     binarize_target(data, target="outcome", inplace=True)
     write_data(data, path_out)
-
-    print(f"Data preprocessing completed. Formatted data saved to '{path_out}'.")
     return data
 
 
@@ -108,14 +107,12 @@ def simple_train_validate(data):
 
 
 def cross_validate(data):
-    print("Running cross-validation (5-fold) to improve evaluation...")
-    cv_scores = cross_validate_model(
+    cross_validate_model(
         data,
         target="outcome",
         cv=5,
         model_out="models/logistic_regression_cv_best.pkl",
     )
-    print(f"Cross-val mean: {cv_scores.mean():.4f}, std: {cv_scores.std():.4f}\n")
 
 
 def compare_classifiers(data_path):
@@ -156,8 +153,6 @@ def main():
     cross_validate(data)
 
     # compare_classifiers(file_path_out)
-
-    evaluate_saved_model(model_path="models/logistic_regression_cv_best.pkl", data=data)
 
 
 if __name__ == "__main__":
